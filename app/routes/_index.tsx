@@ -1,11 +1,8 @@
-import type { MetaFunction, LoaderFunction, ActionFunction } from "@remix-run/node";
+import type { LoaderFunction, ActionFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { useLoaderData, useActionData, Form, useSubmit } from "@remix-run/react";
 import { getAllImageUrls, getRecipe, uploadToS3 } from "./utils/server"; // Adjust the import path as necessary
-import { useState, useRef, useEffect } from "react"; // Import useState for managing the current image index and recipe visibility, and useRef for file input reference
-import { useNavigate } from "@remix-run/react";
-import forge from "forge/client";
-
+import { useState, useEffect } from "react"; // Import useState for managing the current image index and recipe visibility, and useRef for file input reference
 
 // Loader function to fetch all image URLs
 export const loader: LoaderFunction = async () => {
