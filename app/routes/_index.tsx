@@ -1,9 +1,28 @@
 import type { MetaFunction, LoaderFunction, ActionFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { useLoaderData, useActionData, Form, useSubmit } from "@remix-run/react";
-import { getAllImageUrls, getRecipe, uploadToS3 } from "./utils/server"; // Adjust the import path as necessary
+import { getAllImageUrls, uploadToS3 } from "./utils/server"; // Adjust the import path as necessary
 import { useState, useRef, useEffect } from "react"; // Import useState for managing the current image index and recipe visibility, and useRef for file input reference
 import { useNavigate } from "@remix-run/react";
+import forge from "forge/client";
+
+async function getRecipe(imageUrl: string) {
+  try {
+    const response = await forge.recipe.queryImage(
+      {
+        prompt: "Describe the recipe of the image",
+        imageUrl: imageUrl,
+      },
+      //{
+      //  cache: "Bust",
+      //}
+    );
+    return response;
+  } catch (error) {
+    console.error("Error querying Forge:", error);
+    throw new Error("Error processing the image");
+  }
+}
 
 // Loader function to fetch all image URLs
 export const loader: LoaderFunction = async () => {
@@ -45,7 +64,7 @@ export const action: ActionFunction = async ({ request }) => {
   }
 };
 
-function FileUploader({ onUploadSuccess }) {
+function FileUploader() {
   const [file, setFile] = useState<File | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
   const actionData = useActionData();
@@ -54,7 +73,6 @@ function FileUploader({ onUploadSuccess }) {
   useEffect(() => {
     if (actionData?.success) {
       setNotification("File uploaded successfully!");
-      onUploadSuccess(); // Call the callback function
       const timer = setTimeout(() => {
         setNotification(null);
       }, 3000);
@@ -78,19 +96,19 @@ function FileUploader({ onUploadSuccess }) {
   };
 
   return (
-    <>
-      <Form method="post" encType="multipart/form-data" onSubmit={handleSubmit}>
+    <div className="flex flex-col items-center relative">
+      <Form method="post" encType="multipart/form-data" onSubmit={handleSubmit} className="flex items-center">
         <input type="file" name="file" onChange={handleFileChange} className="file-input file-input-bordered file-input-primary w-full max-w-xs" />
         <button type="submit" className="btn btn-primary ml-2">
           Upload to S3
         </button>
       </Form>
       {notification && (
-        <div className="mt-4 p-2 bg-green-100 text-green-700 rounded">
+        <div className="absolute bottom-[-40px] left-0 right-0 mt-2 p-2 bg-pink-100 text-pink-700 rounded w-full max-w-xs text-center">
           {notification}
         </div>
       )}
-    </>
+    </div>
   );
 }
 
@@ -98,14 +116,13 @@ export default function Index() {
   const { imageUrls, recipeData } = useLoaderData<typeof loader>();
   const [currentIndex, setCurrentIndex] = useState(0); // State to track the current image index
   const [showRecipe, setShowRecipe] = useState(false); // State to control recipe visibility
-  const fileInputRef = useRef<HTMLInputElement | null>(null); // Reference for the file input
-  const [selectedFile, setSelectedFile] = useState<File | null>(null); // State to store the selected file
   const [localImageUrls, setLocalImageUrls] = useState(imageUrls);
   const [localRecipeData, setLocalRecipeData] = useState(recipeData);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const actionData = useActionData<typeof action>();
 
+
   useEffect(() => {
+
     if (actionData?.success) {
       setLocalImageUrls([actionData.fileUrl, ...localImageUrls]);
       setLocalRecipeData([actionData.recipeData, ...localRecipeData]);
@@ -126,35 +143,6 @@ export default function Index() {
     setShowRecipe(true); // Show the recipe when the button is pressed
     console.log("Generating recipe for:", localImageUrls[currentIndex]);
   };
-
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files[0]) {
-      const file = event.target.files[0];
-      setSelectedFile(file);
-      console.log("Selected file:", file);
-
-      // Create FormData to send the file
-      const formData = new FormData();
-      formData.append("file", file);
-
-    }
-  };
-
-  const handleUploadSuccess = () => {
-    setRefreshTrigger(prev => prev + 1);
-  };
-
-  // useEffect(() => {
-  //   // Fetch updated image URLs and recipe data when refreshTrigger changes
-  //   const fetchData = async () => {
-  //     const response = await fetch('/?index'); // Update this to the correct route
-  //     const data = await response.json();
-  //     setLocalImageUrls(data.imageUrls);
-  //     setLocalRecipeData(data.recipeData);
-  //   };
-
-  //   fetchData();
-  // }, [refreshTrigger]);
 
   return (
     <div className="flex flex-col items-center justify-center w-full h-screen">
@@ -180,7 +168,7 @@ export default function Index() {
         </div>
       </div>
       <div className="flex flex-row items-center justify-center w-full h-1/4">
-        <FileUploader onUploadSuccess={handleUploadSuccess} />
+        <FileUploader />
       </div>
     </div>
   );
@@ -188,29 +176,40 @@ export default function Index() {
 
 const RecipeCard = ({ recipe }) => {
   return (
-    <div className=" p-4 rounded-lg h-full"> {/* Ensure card takes full height of the box */}
-      <h3 className="text-2xl font-bold mb-2">{recipe.title}</h3>
-      <div className="mb-4">
-        <h4 className="text-lg font-semibold">Ingredients:</h4>
-        <ul className="list-disc list-inside">
-          {recipe.ingredients.map((ingredient, index) => (
-            <li key={index}>{ingredient}</li>
-          ))}
-        </ul>
-      </div>
-      <div className="mb-4">
-        <h4 className="text-lg font-semibold">Instructions:</h4>
-        <ol className="list-decimal list-inside">
-          {recipe.instructions.map((instruction, index) => (
-            <li key={index}>{instruction}</li>
-          ))}
-        </ol>
-      </div>
-      <div className="mb-4">
-        <p><strong>Preparation Time:</strong> {recipe.preparationTime} minutes</p>
-        <p><strong>Cooking Time:</strong> {recipe.cookingTime} minutes</p>
-        <p><strong>Servings:</strong> {recipe.servings}</p>
-        <p><strong>Cuisine:</strong> {recipe.cuisine}</p>
+    <div className="bg-base-100 p-4 rounded-lg shadow-lg h-full flex flex-col">
+      <h3 className="text-2xl font-bold mb-2 text-primary">{recipe.title}</h3>
+      <div className="flex flex-row gap-4 flex-grow">
+        <div className="w-1/2 flex flex-col">
+          <h4 className="text-lg font-semibold mb-1 text-base-content">Ingredients</h4>
+          <ul className="text-md space-y-1 flex-grow overflow-auto">
+            {recipe.ingredients.map((ingredient, index) => (
+              <li key={index} className="flex items-center">
+                <span className="mr-1 text-primary">•</span>
+                <span className="text-base-content">{ingredient}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="w-1/2 flex flex-col">
+          <div className="bg-base-200 p-2 rounded-lg mb-2">
+            <h4 className="text-lg font-semibold mb-1 text-base-content">Recipe Details</h4>
+            <div className="text-md space-y-1">
+              <p><span className="font-medium text-primary">Prep:</span> <span className="text-base-content">{recipe.preparationTime} min</span></p>
+              <p><span className="font-medium text-primary">Cook:</span> <span className="text-base-content">{recipe.cookingTime} min</span></p>
+              <p><span className="font-medium text-primary">Servings:</span> <span className="text-base-content">{recipe.servings}</span></p>
+              <p><span className="font-medium text-primary">Cuisine:</span> <span className="text-base-content">{recipe.cuisine}</span></p>
+            </div>
+          </div>
+          <h4 className="text-lg font-semibold mb-1 text-base-content">Instructions</h4>
+          <ol className="text-md space-y-1 flex-grow overflow-auto">
+            {recipe.instructions.map((instruction, index) => (
+              <li key={index} className="flex">
+                <span className="font-bold text-primary mr-1">{index + 1}.</span>
+                <span className="text-base-content">{instruction}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
       </div>
     </div>
   );
