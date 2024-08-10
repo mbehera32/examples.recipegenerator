@@ -8,15 +8,15 @@ import { Upload } from "@aws-sdk/lib-storage";
 // import multerS3 from "multer-s3";
 import forge from "../../../forge/client";
 
-if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
+if (!process.env.ACCESS_KEY_ID || !process.env.SECRET_ACCESS_KEY) {
   throw new Error("AWS credentials not found");
 }
 
 const s3Client = new S3Client({
-  region: process.env.AWS_REGION,
+  region: process.env.REGION,
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    accessKeyId: process.env.ACCESS_KEY_ID!,
+    secretAccessKey: process.env.SECRET_ACCESS_KEY!,
   },
 });
 
@@ -24,7 +24,7 @@ export async function uploadToS3(file: File, key: string) {
   const upload = new Upload({
     client: s3Client,
     params: {
-      Bucket: process.env.AWS_S3_BUCKET,
+      Bucket: process.env.S3_BUCKET,
       Key: `food/${key}`, // Add the folder name here
       Body: file,
       ContentType: file.type,
@@ -42,7 +42,7 @@ export async function uploadToS3(file: File, key: string) {
 }
 
 export function getImageUrl(key: string) {
-  const imageUrl = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+  const imageUrl = `https://${process.env.S3_BUCKET}.s3.${process.env.REGION}.amazonaws.com/${key}`;
   if (!imageUrl) {
     throw new Error("Image URL not found");
   }
@@ -70,7 +70,7 @@ export async function getRecipe(imageUrl: string) {
 export async function getImageMetadata(key: string) {
   try {
     const command = new HeadObjectCommand({
-      Bucket: process.env.AWS_S3_BUCKET,
+      Bucket: process.env.S3_BUCKET,
       Key: key,
     });
 
@@ -90,7 +90,7 @@ export async function getImageMetadata(key: string) {
 
 export async function getAllImageUrls() {
   const command = new ListObjectsV2Command({
-    Bucket: process.env.AWS_S3_BUCKET,
+    Bucket: process.env.S3_BUCKET,
   });
 
   try {
@@ -111,7 +111,7 @@ export async function getAllImageUrls() {
       );
     }).map(
       (item) =>
-        `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${item.Key}`
+        `https://${process.env.S3_BUCKET}.s3.${process.env.REGION}.amazonaws.com/${item.Key}`
     );
 
     return imageUrls || [];
