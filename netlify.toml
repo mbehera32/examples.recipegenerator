@@ -10,7 +10,9 @@ framework = "vite"
 
 [[headers]]
 for = "/build/*"
-
+for = "/*"
+[headers.values]
+Access-Control-Allow-Origin = "*"
 [headers.values]
 
 "Cache-Control" = "public, max-age=31560000, immutable"

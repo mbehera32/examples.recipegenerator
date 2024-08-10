@@ -1,28 +1,11 @@
 import type { MetaFunction, LoaderFunction, ActionFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { useLoaderData, useActionData, Form, useSubmit } from "@remix-run/react";
-import { getAllImageUrls, uploadToS3 } from "./utils/server"; // Adjust the import path as necessary
+import { getAllImageUrls, getRecipe, uploadToS3 } from "./utils/server"; // Adjust the import path as necessary
 import { useState, useRef, useEffect } from "react"; // Import useState for managing the current image index and recipe visibility, and useRef for file input reference
 import { useNavigate } from "@remix-run/react";
 import forge from "forge/client";
 
-async function getRecipe(imageUrl: string) {
-  try {
-    const response = await forge.recipe.queryImage(
-      {
-        prompt: "Describe the recipe of the image",
-        imageUrl: imageUrl,
-      },
-      //{
-      //  cache: "Bust",
-      //}
-    );
-    return response;
-  } catch (error) {
-    console.error("Error querying Forge:", error);
-    throw new Error("Error processing the image");
-  }
-}
 
 // Loader function to fetch all image URLs
 export const loader: LoaderFunction = async () => {
