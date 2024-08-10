@@ -157,12 +157,12 @@ export default function Index() {
 
 const RecipeCard = ({ recipe }) => {
   return (
-    <div className="bg-base-100 p-4 rounded-lg shadow-lg h-full flex flex-col">
-      <h3 className="text-2xl font-bold mb-2 text-primary">{recipe.title}</h3>
-      <div className="flex flex-row gap-4 flex-grow">
+    <div className="bg-base-100 p-2 rounded-lg shadow-lg h-full flex flex-col text-sm">
+      <h3 className="text-lg font-bold mb-1 text-primary">{recipe.title}</h3>
+      <div className="flex flex-row gap-2 flex-grow">
         <div className="w-1/2 flex flex-col">
-          <h4 className="text-lg font-semibold mb-1 text-base-content">Ingredients</h4>
-          <ul className="text-md space-y-1 flex-grow overflow-auto">
+          <h4 className="text-base font-semibold mb-1 text-base-content">Ingredients</h4>
+          <ul className="space-y-0.5 flex-grow overflow-auto">
             {recipe.ingredients.map((ingredient, index) => (
               <li key={index} className="flex items-center">
                 <span className="mr-1 text-primary">•</span>
@@ -172,17 +172,17 @@ const RecipeCard = ({ recipe }) => {
           </ul>
         </div>
         <div className="w-1/2 flex flex-col">
-          <div className="bg-base-200 p-2 rounded-lg mb-2">
-            <h4 className="text-lg font-semibold mb-1 text-base-content">Recipe Details</h4>
-            <div className="text-md space-y-1">
+          <div className="bg-base-200 p-1 rounded-lg mb-1">
+            <h4 className="text-base font-semibold mb-0.5 text-base-content">Recipe Details</h4>
+            <div className="space-y-0.5">
               <p><span className="font-medium text-primary">Prep:</span> <span className="text-base-content">{recipe.preparationTime} min</span></p>
               <p><span className="font-medium text-primary">Cook:</span> <span className="text-base-content">{recipe.cookingTime} min</span></p>
               <p><span className="font-medium text-primary">Servings:</span> <span className="text-base-content">{recipe.servings}</span></p>
               <p><span className="font-medium text-primary">Cuisine:</span> <span className="text-base-content">{recipe.cuisine}</span></p>
             </div>
           </div>
-          <h4 className="text-lg font-semibold mb-1 text-base-content">Instructions</h4>
-          <ol className="text-md space-y-1 flex-grow overflow-auto">
+          <h4 className="text-base font-semibold mb-0.5 text-base-content">Instructions</h4>
+          <ol className="space-y-0.5 flex-grow overflow-auto">
             {recipe.instructions.map((instruction, index) => (
               <li key={index} className="flex">
                 <span className="font-bold text-primary mr-1">{index + 1}.</span>
