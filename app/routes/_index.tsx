@@ -18,6 +18,7 @@ export const loader: LoaderFunction = async () => {
 
     return json({ imageUrls, recipeData });
   } catch (error) {
+    console.error("Loader error:", error);
     return json({ error: "Failed to load data" }, { status: 500 });
   }
 };
